@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    command: ["uvicorn", "app.services.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+    depends_on:
+      - postgres
+      - redis
+
+  strategy-runner:
+    build:
+      context: .
+      dockerfile: docker/runner.Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    command: ["python", "-m", "app.services.strategy_runner.main"]
+    depends_on:
+      - postgres
+      - redis
+
+  reconciler:
+    build:
+      context: .
+      dockerfile: docker/reconciler.Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    command: ["python", "-m", "app.services.reconciler.main"]
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: trading
+      POSTGRES_USER: trading
+      POSTGRES_PASSWORD: trading
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+volumes:
+  pg_data:
+  redis_data:
