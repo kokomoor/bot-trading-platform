@@ -89,7 +89,6 @@ exclude = ["alembic"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF", "ANN", "ASYNC"]
-ignore = ["ANN101", "ANN102"]
 
 [tool.ruff.format]
 quote-style = "double"
