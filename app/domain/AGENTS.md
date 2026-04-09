@@ -1,28 +1,33 @@
 # app/domain/AGENTS.md
 
 ## Subtree purpose
-Trading domain language, entities/value objects, and invariant definitions.
+Pure trading domain language, invariants, and transition rules.
 
 ## Belongs here
-- Order/position/risk state concepts
-- Domain events/intents abstractions
-- Validation rules independent of transport/storage
+- Domain entities/value objects.
+- Order intent and order lifecycle semantics.
+- Domain event envelopes and serialization contracts.
+- Risk and reconciliation concepts.
 
 ## Does not belong here
-- SQLAlchemy table mappings
-- HTTP request/response models
-- External adapter concerns
+- SQLAlchemy models.
+- API transport DTOs.
+- External API payload mappings.
 
 ## Invariants
-- Domain remains persistence-agnostic and transport-agnostic.
-- Invariant checks must be explicit and testable.
-
-## Testing expectations
-- Strong unit coverage around state transitions and invariant failures.
+- Strategies emit intents only; they never place orders directly.
+- Order lifecycle transitions are validated by domain state rules.
+- Domain event envelopes must remain stable, typed, and replay-friendly.
 
 ## Common mistakes
-- Mixing ORM/serialization details into domain entities.
-- Encoding provider quirks as domain rules.
+- Mixing database row structures into domain objects.
+- Skipping transition validation and mutating order status ad hoc.
+- Coupling domain events to queue/broker implementation details.
+
+## Testing expectations
+- Unit tests must cover valid/invalid order transitions.
+- Event serialization/deserialization must be round-trip safe.
 
 ## Extension guidance
-- Introduce new concepts via value objects and explicit transition rules.
+- Add domain modules per bounded context (accounts/orders/risk/etc.).
+- Keep domain side-effect free.

@@ -1,33 +1,30 @@
 # app/infrastructure/AGENTS.md
 
 ## Subtree purpose
-Concrete technical implementations for persistence and external integrations.
+Concrete persistence and integration implementations.
 
 ## Belongs here
-- Async SQLAlchemy engine/session wiring.
-- DB metadata/base organization and migration integration.
-- Redis and provider adapter implementations.
-- Transaction helper patterns and persistence boundaries.
+- SQLAlchemy schema/models and migrations.
+- Repository implementations.
+- Durable event store/outbox persistence.
 
 ## Does not belong here
-- Domain rule ownership.
-- API handler code and request models.
-- Service command orchestration.
+- Core domain policy and transition rules.
+- API request/response models.
 
 ## Invariants
-- Postgres-first defaults (`postgresql+asyncpg`) for primary persistence.
-- No synchronous SQLAlchemy session patterns in app code.
-- Naming conventions on metadata must remain stable for migrations.
-- Infrastructure translates to/from domain contracts, without redefining domain logic.
-
-## Testing expectations
-- Unit tests for engine/session wiring and transaction helpers.
-- Integration tests should prefer real Postgres-backed workflows (no SQLite default path).
+- Postgres-first async persistence only.
+- Domain events are persisted durably before publication.
+- Idempotency keys are enforced at storage boundary.
 
 ## Common mistakes
-- Leaking provider payload shapes beyond infrastructure boundaries.
-- Coupling adapters directly to interface layer.
+- Publishing events before DB commit.
+- Encoding business decisions inside repository query methods.
+
+## Testing expectations
+- Persistence tests should use real Postgres when integration testing.
+- Replay and outbox query behavior must be validated.
 
 ## Extension guidance
-- Keep adapter implementations isolated per provider.
-- Add migrations when introducing persistence-bearing models.
+- Keep repositories narrowly focused and typed.
+- Add indexes with every new high-cardinality query path.
