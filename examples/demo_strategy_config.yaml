@@ -1,0 +1,11 @@
+strategy_id: mean_reversion_demo
+enabled: true
+symbol: BTC-USD
+timeframe: 1m
+risk:
+  max_position_notional: 1000
+  max_daily_loss: 100
+execution:
+  venue: paper
+  order_type: limit
+  slippage_bps: 2
