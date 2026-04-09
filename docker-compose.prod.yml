@@ -9,8 +9,15 @@ services:
     env_file: .env
     command: ["uvicorn", "app.services.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   strategy-runner:
     build:
@@ -20,8 +27,10 @@ services:
     env_file: .env
     command: ["python", "-m", "app.services.strategy_runner.main"]
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   reconciler:
     build:
@@ -31,8 +40,10 @@ services:
     env_file: .env
     command: ["python", "-m", "app.services.reconciler.main"]
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   postgres:
     image: postgres:16-alpine
@@ -43,12 +54,22 @@ services:
       POSTGRES_PASSWORD: trading
     volumes:
       - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trading -d trading"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
     restart: unless-stopped
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   pg_data:

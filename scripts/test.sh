@@ -2,5 +2,6 @@
 set -euo pipefail
 
 ruff check .
+ruff format --check .
 mypy app
-pytest
+pytest -m "not integration"

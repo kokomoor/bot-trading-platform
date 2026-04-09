@@ -1,14 +1,19 @@
 # app/tests/AGENTS.md
 
 ## Purpose
-Validate correctness, recovery behavior, and operational safeguards.
+Validate correctness, recovery behavior, and operations safety.
 
-## Invariants
-- Cover risk rejection/approval paths.
-- Cover idempotency and restart-safety scenarios.
-- Cover reconciliation mismatch detection and replay querying.
-- Keep integration tests Postgres-backed when persistence behavior matters.
+## Required expectations
+- Unit tests remain fast and deterministic.
+- Integration tests use live Postgres/Redis service assumptions.
+- Reconciliation, replay, idempotency, and kill-switch paths require coverage.
 
-## Extension guidance
-- Add focused tests for every new lifecycle transition.
-- Prefer deterministic simulation fixtures for operational workflows.
+## CI assumptions
+- Integration tests run with `BTP_TEST_DATABASE_URL` configured.
+- Migration checks run against fresh Postgres in CI service containers.
+
+## Validation commands
+- `pytest -m "not integration"`
+- `pytest -m integration`
+- `ruff check .`
+- `mypy app`

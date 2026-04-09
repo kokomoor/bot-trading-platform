@@ -11,6 +11,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from app.infrastructure.db import Base
+
 
 @pytest.fixture(scope="session")
 def integration_database_url() -> str:
@@ -23,9 +25,13 @@ async def integration_engine(integration_database_url: str) -> AsyncIterator[Asy
         pytest.skip("Set BTP_TEST_DATABASE_URL to run Postgres integration fixtures")
 
     engine = create_async_engine(integration_database_url, future=True)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     try:
         yield engine
     finally:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
         await engine.dispose()
 
 
