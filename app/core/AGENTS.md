@@ -1,29 +1,36 @@
 # app/core/AGENTS.md
 
 ## Subtree purpose
-Cross-cutting kernel concerns used by multiple modules.
+Shared platform kernel used by every runtime service.
 
 ## Belongs here
-- Settings/config primitives
-- Structured logging bootstrap
-- Shared identifiers/time abstractions
-- Domain-agnostic contracts/helpers
+- Typed configuration (`pydantic-settings`) and environment-aware helpers.
+- Logging setup (`structlog`) and correlation-id context helpers.
+- Observability primitives (Prometheus metric registry/helpers, health/readiness models).
+- Deterministic ID helpers.
+- Clock abstractions used by execution/reconciliation/simulation logic.
 
 ## Does not belong here
-- Trading domain rules
-- Broker/exchange-specific integration logic
-- Service orchestration workflows
+- Trading domain entities/state transitions.
+- SQLAlchemy models or adapter implementations.
+- Service-specific orchestration.
 
 ## Invariants
-- Keep dependencies minimal and stable.
-- No infrastructure-specific coupling.
+- `BTP_` environment variable prefix is mandatory for runtime settings.
+- No hidden side effects at import time except immutable constants.
+- Core APIs must stay strongly typed and deterministic.
+- App code should log via `app.core.logging` wrappers, not direct stdlib logger usage.
 
 ## Testing expectations
-- Deterministic unit tests for utilities and config parsing.
+- Validate settings parsing/validation paths and env prefix behavior.
+- Validate ID and clock determinism/invariants.
+- Validate metrics registration and health/readiness helpers.
 
 ## Common mistakes
-- Turning core into a generic dumping ground.
-- Introducing business logic in shared utility code.
+- Putting broker/exchange semantics in core.
+- Adding weakly typed dict-based config surfaces.
+- Emitting plain prints instead of structured logs.
 
 ## Extension guidance
-- Add focused modules with explicit usage boundaries.
+- Add narrow modules with explicit responsibility.
+- Keep public API stable and update tests + docs with each new core contract.

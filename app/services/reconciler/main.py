@@ -1,9 +1,12 @@
 """Reconciler placeholder service."""
 
+from app.core.logging import get_logger
+
+logger = get_logger(service="reconciler")
+
 
 def run() -> None:
-    """Placeholder entrypoint for future reconciler runtime."""
-    print("reconciler placeholder")
+    logger.info("reconciler.startup")
 
 
 if __name__ == "__main__":

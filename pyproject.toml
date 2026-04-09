@@ -67,6 +67,9 @@ minversion = "8.0"
 addopts = "-ra -q --strict-markers --strict-config --cov=app --cov-report=term-missing --cov-report=xml"
 testpaths = ["app/tests"]
 asyncio_mode = "auto"
+markers = [
+  "integration: requires live dependencies such as PostgreSQL",
+]
 
 [tool.coverage.run]
 branch = true

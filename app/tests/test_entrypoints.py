@@ -1,29 +1,30 @@
 from unittest.mock import patch
 
-from pytest import CaptureFixture
-
-from app.interfaces.cli.main import main as cli_main
+from app.interfaces.cli import main as cli_module
 from app.services.api import main as api_main
-from app.services.reconciler.main import run as reconciler_run
-from app.services.strategy_runner.main import run as runner_run
+from app.services.reconciler import main as reconciler_module
+from app.services.strategy_runner import main as runner_module
 
 
-def test_cli_main_prints_placeholder(capsys: CaptureFixture[str]) -> None:
-    cli_main()
-    captured = capsys.readouterr()
-    assert "CLI placeholder" in captured.out
+def test_cli_main_logs_startup() -> None:
+    with patch.object(cli_module.logger, "info") as mocked_info:
+        cli_module.main()
+
+    mocked_info.assert_called_once_with("cli.startup")
 
 
-def test_strategy_runner_run_prints_placeholder(capsys: CaptureFixture[str]) -> None:
-    runner_run()
-    captured = capsys.readouterr()
-    assert "strategy-runner placeholder" in captured.out
+def test_strategy_runner_logs_startup() -> None:
+    with patch.object(runner_module.logger, "info") as mocked_info:
+        runner_module.run()
+
+    mocked_info.assert_called_once_with("strategy_runner.startup")
 
 
-def test_reconciler_run_prints_placeholder(capsys: CaptureFixture[str]) -> None:
-    reconciler_run()
-    captured = capsys.readouterr()
-    assert "reconciler placeholder" in captured.out
+def test_reconciler_logs_startup() -> None:
+    with patch.object(reconciler_module.logger, "info") as mocked_info:
+        reconciler_module.run()
+
+    mocked_info.assert_called_once_with("reconciler.startup")
 
 
 def test_api_run_invokes_uvicorn() -> None:
@@ -35,4 +36,5 @@ def test_api_run_invokes_uvicorn() -> None:
         host="0.0.0.0",
         port=8000,
         reload=False,
+        workers=1,
     )
