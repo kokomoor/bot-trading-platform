@@ -10,10 +10,16 @@ from app.services.strategy_runner.strategy import Strategy, StrategyIntent
 @dataclass(slots=True)
 class StrategyRunner:
     strategies: list[Strategy]
+    enabled_strategies: set[str] | None = None
 
     def process_tick(self, tick: MarketTick) -> list[StrategyIntent]:
         intents: list[StrategyIntent] = []
         for strategy in self.strategies:
+            if (
+                self.enabled_strategies is not None
+                and strategy.metadata.strategy_id not in self.enabled_strategies
+            ):
+                continue
             intent = strategy.on_tick(tick)
             if intent is not None:
                 intents.append(intent)

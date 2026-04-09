@@ -4,6 +4,8 @@ import argparse
 import asyncio
 
 from app.core.logging import get_logger
+from app.services.execution_engine.replay import EventReplayService, ReplayQuery
+from app.services.reconciler.main import run_once as run_reconciler_once
 from app.services.shared.platform_state import platform_state
 from app.services.simulation.main import run as run_simulation
 from app.services.strategy_runner.main import run_once as run_strategy_once
@@ -28,13 +30,28 @@ def _inspect_events(limit: int) -> None:
         logger.info("cli.event", **event)
 
 
+def _replay_events(limit: int, recovery_mode: bool) -> None:
+    replay_service = EventReplayService(platform_state)
+    events = replay_service.replay(ReplayQuery(limit=limit), recovery_mode=recovery_mode)
+    for event in events:
+        logger.info("cli.replay_event", **event)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="btp")
     parser.add_argument(
         "command",
-        choices=["seed-demo-data", "run-simulation", "run-strategy-once", "inspect-events"],
+        choices=[
+            "seed-demo-data",
+            "run-simulation",
+            "run-strategy-once",
+            "run-reconciler-once",
+            "inspect-events",
+            "replay-events",
+        ],
     )
     parser.add_argument("--limit", type=int, default=20)
+    parser.add_argument("--recovery-mode", action="store_true")
     args = parser.parse_args()
 
     if args.command == "seed-demo-data":
@@ -46,8 +63,14 @@ def main() -> None:
     if args.command == "run-strategy-once":
         asyncio.run(run_strategy_once())
         return
+    if args.command == "run-reconciler-once":
+        asyncio.run(run_reconciler_once())
+        return
     if args.command == "inspect-events":
         _inspect_events(args.limit)
+        return
+    if args.command == "replay-events":
+        _replay_events(args.limit, args.recovery_mode)
         return
 
 

@@ -18,6 +18,13 @@ class ExecutionEngine:
     state: PlatformState
 
     async def submit_intent(self, intent: StrategyIntent, reference_price: float) -> RiskDecision:
+        previous = self.state.processed_intents.get(intent.idempotency_key)
+        if previous is not None:
+            return RiskDecision(
+                approved=bool(previous["approved"]),
+                reason=str(previous["reason"]),
+            )
+
         self.state.record_event(
             envelope_to_dict(
                 build_event_envelope(
@@ -57,6 +64,10 @@ class ExecutionEngine:
             )
         )
         if not decision.approved:
+            self.state.processed_intents[intent.idempotency_key] = {
+                "approved": False,
+                "reason": decision.reason,
+            }
             return decision
 
         response = await self.adapter.place_order(
@@ -100,9 +111,17 @@ class ExecutionEngine:
         )
 
         self._apply_fill(order)
+        self.state.processed_intents[intent.idempotency_key] = {
+            "approved": True,
+            "reason": decision.reason,
+            "order_id": order_id,
+        }
         return decision
 
     async def cancel_order(self, order_id: str) -> None:
+        existing = self.state.orders.get(order_id)
+        if existing is not None and existing.status == "canceled":
+            return
         response = await self.adapter.cancel_order(order_id)
         if order_id in self.state.orders:
             self.state.orders[order_id].status = response.status
@@ -124,6 +143,14 @@ class ExecutionEngine:
         existing.quantity = new_quantity
         existing.price = new_price
         existing.status = response.status
+
+    def startup_recovery(self) -> list[str]:
+        recovered_orders: list[str] = []
+        for order_id, order in self.state.orders.items():
+            if order.status in {"submitted", "acknowledged", "pending_submit"}:
+                order.status = "stuck_pending"
+                recovered_orders.append(order_id)
+        return recovered_orders
 
     def _apply_fill(self, order: OrderView) -> None:
         if order.status != "filled":

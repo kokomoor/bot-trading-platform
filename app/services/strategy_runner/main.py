@@ -18,8 +18,11 @@ logger = get_logger(service="strategy_runner")
 
 async def run_once() -> None:
     logger.info("strategy_runner.startup")
-    platform_state.strategies["ma_cross"] = {"name": "Moving Average Cross"}
-    platform_state.strategies["threshold_reversion"] = {"name": "Threshold Reversion"}
+    platform_state.strategies["ma_cross"] = {"name": "Moving Average Cross", "enabled": True}
+    platform_state.strategies["threshold_reversion"] = {
+        "name": "Threshold Reversion",
+        "enabled": True,
+    }
 
     ma_strategy = MovingAverageCrossStrategy(
         metadata=StrategyRuntimeMetadata(
@@ -43,7 +46,15 @@ async def run_once() -> None:
         anchor_price=100.0,
     )
 
-    runner = StrategyRunner(strategies=[ma_strategy, threshold_strategy])
+    enabled_strategies = {
+        strategy_id
+        for strategy_id, strategy_meta in platform_state.strategies.items()
+        if bool(strategy_meta.get("enabled", True))
+    }
+    runner = StrategyRunner(
+        strategies=[ma_strategy, threshold_strategy],
+        enabled_strategies=enabled_strategies,
+    )
     feed = SimulatedMarketFeed(symbol="BTC-USD", seed_price=100.0, step=1.0, length=30)
     for tick in feed.stream():
         intents = runner.process_tick(tick)

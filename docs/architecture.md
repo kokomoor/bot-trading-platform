@@ -1,32 +1,20 @@
 # Architecture
 
-## Overview
-The platform follows a **modular monolith with service-oriented runtimes** approach:
-- one repository
-- clear bounded modules
-- separately runnable service processes/containers where useful
-- shared domain model and contracts
+## Operational slice now implemented
+The platform supports an end-to-end simulation/paper path:
+- market feed -> strategy runner -> intent emission
+- central risk engine -> execution engine
+- normalized adapter placement (simulation adapter)
+- fills update positions/balances
+- events recorded for operator visibility and replay
 
-This avoids both monolithic tangling and premature microservice fragmentation.
+## Control boundaries
+- Strategies never call venue adapters directly.
+- Execution engine is the only order-state authority.
+- Risk engine gates intents before placement.
+- Reconciler compares internal state against adapter truth.
 
-## Core layers
-- **Core**: shared settings, structured logging, common contracts/utilities.
-- **Domain**: business language and invariants (orders, fills, positions, risk intents).
-- **Infrastructure**: technical integrations (DB, cache, adapters, messaging implementation).
-- **Services**: runtime orchestrators (`api`, `strategy_runner`, `execution_engine`, `reconciler`, `simulation`).
-- **Interfaces**: inbound transport adapters (HTTP, CLI).
-
-## Execution and risk spine
-- Strategies produce **intents** (desired actions).
-- Execution/risk core validates and authorizes transitions.
-- Only execution core can own order lifecycle and external placement responsibility.
-
-## Event backbone
-- Durable DB-backed event/outbox pattern first.
-- Event records are append-oriented and idempotent to replay safely.
-- Kafka or external bus can be added later only when justified by scale/throughput constraints.
-
-## Deployment model
-- Primary target: Linux server + Docker Compose.
-- Postgres and Redis as foundational infrastructure.
-- Runtime services isolated by process/container.
+## Event and replay posture
+- Durable event schema exists in Postgres (`domain_events` + outbox semantics).
+- In-memory operational replay tooling supports safe read-mode by default.
+- Recovery-mode replay is explicit and operator-invoked.

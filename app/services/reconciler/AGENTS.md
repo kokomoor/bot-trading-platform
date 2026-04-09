@@ -1,27 +1,13 @@
 # app/services/reconciler/AGENTS.md
 
-## Subtree purpose
-Detect and resolve divergence between internal state and external venues.
-
-## Belongs here
-- Periodic reconciliation workflows
-- Mismatch detection and remediation triggers
-- Reconciliation metrics/logging
-
-## Does not belong here
-- Primary order placement orchestration
-- Strategy alpha logic
+## Purpose
+Operational truth-check service for orders, positions, and balances.
 
 ## Invariants
-- Reconciliation must be safe to rerun.
-- Side effects must be controlled and auditable.
-
-## Testing expectations
-- Deterministic mismatch scenarios and replay tests.
-
-## Common mistakes
-- Silent auto-corrections without audit trail.
-- Non-deterministic reconciliation outcomes.
+- Reconciliation compares internal state with adapter-reported truth.
+- Every mismatch must be recorded and event-emitted.
+- Reconciliation should be safe to rerun and idempotent in behavior.
 
 ## Extension guidance
-- Expand mismatch taxonomy and remediation policies incrementally.
+- Add severity rules carefully (high/medium/low semantics).
+- Keep reconciliation side effects explicit and auditable.

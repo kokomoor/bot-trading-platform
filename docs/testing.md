@@ -1,21 +1,20 @@
 # Testing Strategy
 
-## Test layers
-- Unit tests: domain logic and invariants.
-- Integration tests: DB/repository/event-outbox behavior.
-- Service tests: runtime boundaries and orchestration behavior.
+## Core test layers
+- Unit tests: strategies, risk decisions, state transitions, replay queries.
+- Service tests: execution end-to-end in simulation mode.
+- API smoke tests: operator/admin endpoints and kill switch controls.
+- Integration tests: repository behavior with real Postgres (`@pytest.mark.integration`).
 
-## Tooling
-- `pytest`, `pytest-asyncio`, `pytest-cov`
-- strict static analysis with `mypy`
-- linting/format with `ruff`
+## Commands
+- `ruff check .`
+- `mypy app`
+- `pytest`
+- Optional integration DB: set `BTP_TEST_DATABASE_URL`.
 
-## Quality gates
-- Lint must pass.
-- Type checks must pass.
-- Tests must pass.
-- Coverage is tracked and enforced with baseline threshold.
-
-## Principles
-- Tests should validate behaviors and invariants, not implementation trivia.
-- Strategy intent flow and execution ownership boundaries must be explicitly tested.
+## Operational-hardening scenarios covered
+- kill switch enforcement
+- duplicate/idempotent intent handling
+- reconciliation mismatch detection
+- adapter health endpoint behavior
+- replay query behavior

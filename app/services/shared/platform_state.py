@@ -36,15 +36,24 @@ class OrderView:
 @dataclass(slots=True)
 class PlatformState:
     kill_switch_enabled: bool = False
-    strategies: dict[str, dict[str, str]] = field(default_factory=dict)
-    deployments: dict[str, dict[str, str]] = field(default_factory=dict)
+    strategies: dict[str, dict[str, object]] = field(default_factory=dict)
+    deployments: dict[str, dict[str, object]] = field(default_factory=dict)
     positions: dict[tuple[str, str], PositionView] = field(default_factory=dict)
     balances: dict[tuple[str, str], BalanceView] = field(default_factory=dict)
     orders: dict[str, OrderView] = field(default_factory=dict)
     events: list[dict[str, object]] = field(default_factory=list)
+    order_timelines: dict[str, list[dict[str, object]]] = field(default_factory=dict)
+    processed_intents: dict[str, dict[str, object]] = field(default_factory=dict)
+    reconciliation_issues: list[dict[str, object]] = field(default_factory=list)
+    critical_dependency_degraded: bool = False
 
     def record_event(self, event: dict[str, object]) -> None:
         self.events.append(event)
+        aggregate_type = str(event.get("aggregate_type", ""))
+        if aggregate_type == "order":
+            aggregate_id = str(event.get("aggregate_id", ""))
+            if aggregate_id:
+                self.order_timelines.setdefault(aggregate_id, []).append(event)
 
 
 platform_state = PlatformState()

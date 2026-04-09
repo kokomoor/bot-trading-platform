@@ -1,23 +1,19 @@
 # Deployment
 
-## Primary target
-- Linux server (systemd optional)
-- Docker Engine + Docker Compose v2
+## Services
+- `api`: operator/admin HTTP and health/readiness/metrics
+- `strategy-runner`: strategy loop and intent generation
+- `reconciler`: state truth checks against adapter views
+- `postgres`, `redis`: persistence and coordination dependencies
 
-## Baseline services
-- `api`
-- `strategy-runner`
-- `reconciler`
-- `postgres`
-- `redis`
+## Startup checklist
+1. Apply migrations: `alembic upgrade head`
+2. Start stack: `docker compose up --build -d`
+3. Validate `/health` and `/ready`
+4. Verify `/admin/adapter-health`
 
-## Environment setup
-1. Copy `.env.example` to `.env` and adjust secrets/hosts.
-2. Provision storage for Postgres and Redis volumes.
-3. Build and start: `docker compose -f docker-compose.prod.yml up --build -d`.
-
-## Hardening checklist (future iterations)
-- TLS termination via reverse proxy.
-- Secret injection via vault/host secret manager.
-- Backup/restore policy for Postgres volumes.
-- Healthchecks and restart/backoff policy tuning.
+## Safe restart expectations
+- Execution startup performs pending-order recovery tagging.
+- Duplicate intent IDs are handled idempotently.
+- Kill switch state is checked before accepting new intents.
+- Reconciliation should be run after restart to detect drift.

@@ -23,3 +23,19 @@ execution_engine = ExecutionEngine(
 def set_kill_switch(enabled: bool) -> None:
     platform_state.kill_switch_enabled = enabled
     risk_engine.set_kill_switch(enabled)
+
+
+async def adapter_health_summary() -> dict[str, bool]:
+    return {
+        "simulation": await execution_engine.adapter.healthcheck(),
+        "kraken_like": False,
+        "ibkr_like": False,
+    }
+
+
+def startup_checks() -> dict[str, object]:
+    recovered = execution_engine.startup_recovery()
+    return {
+        "recovered_pending_orders": recovered,
+        "kill_switch_enabled": platform_state.kill_switch_enabled,
+    }

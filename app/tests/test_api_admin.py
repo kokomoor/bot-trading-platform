@@ -10,6 +10,7 @@ def test_admin_endpoints_smoke() -> None:
 
     assert client.get("/admin/strategies").status_code == 200
     assert client.get("/admin/events").status_code == 200
+    assert client.get("/admin/events/replay").status_code == 200
 
 
 def test_kill_switch_toggle_endpoint() -> None:
@@ -22,3 +23,18 @@ def test_kill_switch_toggle_endpoint() -> None:
     disabled_response = client.post("/admin/kill-switch/false")
     assert disabled_response.status_code == 200
     assert disabled_response.json()["enabled"] is False
+
+
+def test_adapter_health_endpoint() -> None:
+    client = TestClient(app)
+    response = client.get("/admin/adapter-health")
+    assert response.status_code == 200
+    payload = response.json()
+    assert "adapters" in payload
+
+
+def test_health_degraded_flag() -> None:
+    client = TestClient(app)
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["status"] in {"ok", "degraded"}
